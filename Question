@@ -1,0 +1,4 @@
+Create a simple base architecture Using ObjectionJS as an ORM to connect with Mysql.
+ then
+Create CRUD apis for all given tables and create and load rela7ons accordingly.
+ 
