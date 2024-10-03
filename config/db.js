@@ -1,13 +1,12 @@
-// config/db.js
-//Importing Required Libraries:
+
+// config=> db.js
 const { Model } = require('objection');
-const mysql = require('mysql2');
 const Knex = require('knex');
 const dotenv = require('dotenv');
 
 dotenv.config(); // Load environment variables from .env file
 
-//Setting Up Knex Configuration:
+// Setting up Knex configuration
 const knex = Knex({
   client: 'mysql2',
   connection: {
@@ -15,7 +14,8 @@ const knex = Knex({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-  }
+  },
+  debug: true
 });
 
 // Bind all models to the knex instance

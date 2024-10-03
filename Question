@@ -2,3 +2,7 @@ Create a simple base architecture Using ObjectionJS as an ORM to connect with My
  then
 Create CRUD apis for all given tables and create and load rela7ons accordingly.
  
+
+ 1 sept 2024
+ add validation
+ add authentication

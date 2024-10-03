@@ -1,30 +1,19 @@
-// models/Post.js
+// models post
 
-/*The Post model represents a post entity in your application,
- mapped to the posts table in the database. This model
-  establishes relationships with the User and Category models, 
-  indicating that each post belongs to a user and can belong
-   to a specific categor */
-
-   // Imports:
 
 const { Model } = require('objection');
-const User = require('./User');
-const Category = require('./Category');
+const User = require('./User'); // Ensure this path is correct
+const Category = require('./Category'); // Ensure this path is correct
 
 class Post extends Model {
   static get tableName() {
     return 'posts';
   }
 
-// Relation Mappings
-
   static get relationMappings() {
     return {
       user: {
-        //each post belongs to one user ⬇️
         relation: Model.BelongsToOneRelation,
-        // related model is the User model.⬇️
         modelClass: User,
         join: {
           from: 'posts.user_id',
@@ -32,7 +21,6 @@ class Post extends Model {
         },
       },
       category: {
-        //ndicates that each post belongs to a single category.⬇️
         relation: Model.BelongsToOneRelation,
         modelClass: Category,
         join: {

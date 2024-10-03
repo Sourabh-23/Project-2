@@ -1,7 +1,8 @@
- // Model => catagory
+// models catagory
+
 
 const { Model } = require('objection');
-const Post = require('./Post');
+const Post = require('./Post'); // Ensure this path is correct
 
 class Category extends Model {
   static get tableName() {
@@ -11,7 +12,6 @@ class Category extends Model {
   static get relationMappings() {
     return {
       posts: {
-//one category can have many posts.⬇️
         relation: Model.HasManyRelation,
         modelClass: Post,
         join: {

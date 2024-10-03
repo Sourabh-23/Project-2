@@ -1,8 +1,63 @@
-// CONTROLLERS => User Controllers
-
+// controllers/userController.js
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Post = require('../models/Post');
-const Category = require('../models/Category');
+
+// Validation function for user input
+const validateUser = (user) => {
+  const errors = {};
+  if (!user.username) errors.username = 'Username is required';
+  if (!user.email) errors.email = 'Email is required';
+  if (!user.password) errors.password = 'Password is required';
+  return Object.keys(errors).length ? errors : null;
+};
+
+// Create new users
+const createUser = async (req, res) => {
+  const user = req.body;
+
+  // Validate input
+  const errors = validateUser(user);
+  if (errors) return res.status(400).json(errors);
+
+  try {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+    const newUser = await User.query().insert({ ...user, password: hashedPassword });
+    res.status(201).json(newUser);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+};
+
+// Login user
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+
+  try {
+    const user = await User.query().findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+
+    // Create a JWT token
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error('Error logging in user:', error);
+    res.status(500).json({ error: 'Failed to log in user.' });
+  }
+};
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -15,58 +70,59 @@ const getUsers = async (req, res) => {
   }
 };
 
-// Create new users
-const createUser = async (req, res) => {
+// Get user by ID
+const getUserById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const users = await Promise.all(req.body.map(async (user) => {
-      return await User.query().insert(user);
-    }));
-    res.status(201).json(users);
+    const user = await User.query().findById(id).withGraphFetched('posts');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json(user);
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(400).json({ error: 'Failed to create user' });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 };
 
-// Create a new category
-const createCategory = async (req, res) => {
- 
-  try {
-    const category = await Category.query().insert({ name });
-    res.status(201).json(category);
-  } catch (error) {
-    console.error('Error creating category:', error);
-    res.status(400).json({ error: 'Failed to create category' });
-  }
-};
-
- // Get all categories
-const getCategories = async (req, res) => {
-  try {
-    const categories = await Category.query(); // Fetch all categories
-    res.status(200).json(categories);
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    res.status(500).json({ error: 'Failed to fetch categories' });
-  }
-}
-
-// Create a new post with user and category
-const createPost = async (req, res) => {
+// Update user
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
   
   try {
-    const post = await Post.query().insert({ title, content, user_id: userId, category_id: categoryId });
-    res.status(201).json(post);
+    const user = await User.query().patchAndFetchById(id, updates);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json(user);
   } catch (error) {
-    console.error('Error creating post:', error);
-    res.status(400).json({ error: 'Failed to create post' });
+    console.error('Error updating user:', error);
+    res.status(400).json({ error: 'Failed to update user' });
+  }
+};
+
+// Delete user
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const result = await User.query().deleteById(id);
+    if (result === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(204).send(); // No content
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 };
 
 module.exports = {
-  getUsers,
   createUser,
-  createCategory,
-  createPost,
-  getCategories
+  loginUser,
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
 };
